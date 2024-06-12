@@ -100,7 +100,8 @@ def vad_forward(data_dir: str, model_path: str):
         dir_path = str(Path(__file__).parent)
         # with open(dir_path + "/predict/" + file_dir.name[:-3] + "txt", "w") as file:
         #     for segment in voice_segment:
-        #         file.write(str(segment[0]) + "," + str(segment[1]) + "\n")
+        #         file.write(str(segment[0]) + "," + str(segment[1]) + "
+")
         plt.figure(1, figsize=(15, 7))
         plt.clf()
         draw_time_domain_image(

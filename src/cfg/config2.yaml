@@ -1,0 +1,38 @@
+# device
+device: 'cuda:0'
+random_seed: 2024
+
+# for feature extracting:
+#   'mfcc' or 'mel-spectrogram'
+feature_func_name: 'mfcc'
+
+#   common settings for mfcc and mel-spectrogram
+win_length: 0.032 # s
+hop_length: 0.016 # s
+n_mels: 128
+
+#   for mfcc
+n_mfcc: 40
+
+# train test data split
+test_ratio: 0.2
+
+# for model:
+hidden_size: 128
+num_layers: 1
+#   binary classify + 4-class classify
+output_size: 6
+
+# During training
+batch_size: 64
+epochs: 100
+evaluate_interval: 10
+learning_rate: 0.01
+weight_decay: 0.
+
+# lr reduction
+min_lr: 0.0001
+lr_reduction_factor: 0.5
+lr_patience: 3
+metric_threshold: 0.0001
+cool_down: 0

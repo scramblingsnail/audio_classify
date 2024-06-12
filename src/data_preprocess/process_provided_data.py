@@ -58,5 +58,5 @@ def board_preprocess(board_data_dir):
 
 
 if __name__ == '__main__':
-    board_preprocess(r'D:\Datasets\competitions\xinyuan\data\board')
-    pc_preprocess(r'D:\python_works\audio_classify\data\pc')
+    board_preprocess(r'D:/Datasets/competitions/xinyuan/data/board')
+    pc_preprocess(r'D:/python_works/audio_classify/data/pc')
