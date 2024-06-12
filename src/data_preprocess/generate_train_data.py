@@ -1,3 +1,4 @@
+from os import makedirs
 import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
@@ -74,6 +75,8 @@ def vad_forward(data_dir: str, model_path: str):
 
         signal, signal_len = sample_rate_to_8K(signal, sample_rate)
         # signal = signal * 10
+        if np.max(np.abs(signal)) < 10000:
+            signal = signal * (10000 / np.max(signal))
 
         total_pred = np.array([])
         total_indices = np.array([])
@@ -97,21 +100,29 @@ def vad_forward(data_dir: str, model_path: str):
 
         voice_segment = cal_voice_segment(total_pred, total_indices, signal_len)
 
-        dir_path = str(Path(__file__).parent)
+        # dir_path = str(Path(__file__).parent)
         # with open(dir_path + "/predict/" + file_dir.name[:-3] + "txt", "w") as file:
         #     for segment in voice_segment:
         #         file.write(str(segment[0]) + "," + str(segment[1]) + "\n")
-        plt.figure(1, figsize=(15, 7))
-        plt.clf()
-        draw_time_domain_image(
-            signal, nframes=signal_len, framerate=sample_rate, line_style="b-"
-        )
-        # print(voice_segment)
-        draw_result(signal, voice_segment)
-        plt.legend(["signal", "voice segment"])
 
-        plt.grid()
-        plt.show()
+        # plt.figure(1, figsize=(15, 7))
+        # plt.clf()
+        # draw_time_domain_image(
+        #     signal, nframes=signal_len, framerate=sample_rate, line_style="b-"
+        # )
+        # # print(voice_segment)
+        # draw_result(signal, voice_segment)
+        # plt.legend(["signal", "voice segment"])
+
+        # plt.grid()
+        # plt.show()
+
+        segment_dir = data_dir + '/segment'
+        makedirs(segment_dir, exist_ok=True)
+
+        with open(segment_dir + "/" + file_dir.name[:-3] + "txt", "w") as file:
+            for segment in voice_segment:
+                file.write(str(segment[0]) + "," + str(segment[1]) + "\n")
 
 
 if __name__ == "__main__":
@@ -124,6 +135,6 @@ if __name__ == "__main__":
     parent_path = Path(__file__).parent.parent.parent
     print(parent_path)
     model_path = str(parent_path) + "/model/model.pth"
-    data_dir = str(parent_path) + "/data/pc"
+    data_dir = str(parent_path) + "/data/board"
     print(model_path)
     vad_forward(data_dir=data_dir, model_path=model_path)
