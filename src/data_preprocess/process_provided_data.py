@@ -1,6 +1,7 @@
 import torch
 import torchaudio
 import os
+import numpy as np
 
 from torchaudio.functional import resample
 
@@ -13,6 +14,7 @@ def pc_preprocess(pc_data_dir):
         os.mkdir(new_pc_data_dir)
 
     target_sr = 8000
+    sample_bits = 16
     files = os.listdir(pc_data_dir)
 
     for f_name in files:
@@ -22,7 +24,7 @@ def pc_preprocess(pc_data_dir):
         for ch_idx in range(new_wav.size()[0]):
             ch_f_name = f_name.split('.')[0] + '-ch{:d}'.format(ch_idx) + '.wav'
             ch_f_path = os.path.join(new_pc_data_dir, ch_f_name)
-            torchaudio.save(ch_f_path, new_wav[ch_idx:ch_idx+1], target_sr)
+            torchaudio.save(ch_f_path, new_wav[ch_idx:ch_idx+1], target_sr, bits_per_sample=sample_bits)
             print('CH {:d} of {} has been '
                   'resampled as {} with sample rate {:d}'.format(ch_idx, f_name, ch_f_name, target_sr))
 
@@ -35,6 +37,9 @@ def board_preprocess(board_data_dir):
     data_bytes_num = sample_bits // 8
     amplitude = 2 ** (sample_bits - 1) - 1
     for f_name in files:
+        if f_name[-3:] != 'bin':
+            continue
+
         f_path = os.path.join(board_data_dir, f_name)
         size = os.path.getsize(f_path)
         assert size % data_bytes_num == 0
@@ -53,5 +58,5 @@ def board_preprocess(board_data_dir):
 
 
 if __name__ == '__main__':
-    board_preprocess(r'./data/board')
-    pc_preprocess(r'./data/pc')
+    board_preprocess(r'D:\Datasets\competitions\xinyuan\data\board')
+    pc_preprocess(r'D:\python_works\audio_classify\data\pc')

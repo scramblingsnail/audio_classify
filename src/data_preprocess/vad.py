@@ -1,5 +1,5 @@
 import torch
-from model import CNN
+from src.data_preprocess.model import CNN
 from pathlib import Path
 
 class VAD(object):
@@ -27,7 +27,7 @@ class VAD(object):
         :return: The model after loading
         """
         self.model = CNN()
-        self.model.load_state_dict(torch.load(model_path))
+        self.model.load_state_dict(torch.load(model_path, map_location='CPU'))
         self.model.eval()
 
     def process(self,inp_data):
