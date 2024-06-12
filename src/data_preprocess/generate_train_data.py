@@ -22,6 +22,8 @@ def cal_voice_segment(pred_class, pred_idx_in_data, raw_data_len):
     single_voice_segment = []
     diff_value = np.diff(pred_class)
 
+    voice_segment_tolerance = 2500
+
     for i in range(len(diff_value)):
         if diff_value[i] == 1:
             single_voice_segment.append(pred_idx_in_data[i + 1])
@@ -35,10 +37,13 @@ def cal_voice_segment(pred_class, pred_idx_in_data, raw_data_len):
             if len(all_voice_segment) == 0:
                 all_voice_segment = np.array(single_voice_segment).reshape(1, -1)
             else:
-                all_voice_segment = np.concatenate(
-                    (all_voice_segment, np.array(single_voice_segment).reshape(1, -1)),
-                    axis=0,
-                )
+                if single_voice_segment[0] - all_voice_segment[-1][1] < voice_segment_tolerance:
+                    all_voice_segment[-1][1] = single_voice_segment[1]
+                else:
+                    all_voice_segment = np.concatenate(
+                        (all_voice_segment, np.array(single_voice_segment).reshape(1, -1)),
+                        axis=0,
+                    )
             single_voice_segment = []
 
     if len(single_voice_segment) == 1:
@@ -47,6 +52,12 @@ def cal_voice_segment(pred_class, pred_idx_in_data, raw_data_len):
             (all_voice_segment, np.array(single_voice_segment).reshape(1, -1)), axis=0
         )
 
+    delete_index = []
+    for i in range(0, all_voice_segment.shape[0]):
+        if all_voice_segment[i][1] - all_voice_segment[i][0] < voice_segment_tolerance:
+            delete_index.append(i)
+    all_voice_segment = np.delete(all_voice_segment, delete_index, axis=0)
+    
     return all_voice_segment
 
 
