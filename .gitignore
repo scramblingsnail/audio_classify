@@ -1,3 +1,4 @@
 __pycache__
-data
+*.wav
+*.bin
 .DS_Store
