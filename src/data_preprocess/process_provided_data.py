@@ -29,6 +29,7 @@ def pc_preprocess(pc_data_dir):
 
 def board_preprocess(board_data_dir):
     files = os.listdir(board_data_dir)
+    print(files)
     target_sr = 8000
     sample_bits = 16
     data_bytes_num = sample_bits // 8
@@ -51,6 +52,6 @@ def board_preprocess(board_data_dir):
         torchaudio.save(wav_f_path, wav_data, target_sr, bits_per_sample=sample_bits)
 
 
-if __name__ == '__mian__':
-    board_preprocess(r'D:\Datasets\competitions\xinyuan\data\board')
-    pc_preprocess(r'D:\Datasets\competitions\xinyuan\data\pc')
+if __name__ == '__main__':
+    board_preprocess(r'./data/board')
+    pc_preprocess(r'./data/pc')
