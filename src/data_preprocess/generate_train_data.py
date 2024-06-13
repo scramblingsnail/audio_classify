@@ -24,7 +24,7 @@ def cal_voice_segment(pred_class, pred_idx_in_data, raw_data_len):
     single_voice_segment = []
     diff_value = np.diff(pred_class)
 
-    voice_segment_tolerance = 2500
+    voice_segment_tolerance = 1000
 
     for i in range(len(diff_value)):
         if diff_value[i] == 1:
@@ -75,8 +75,9 @@ def vad_forward(data_dir: str, model_path: str):
         print(file_dir, sample_rate)
 
         signal, signal_len = sample_rate_to_8K(signal, sample_rate)
-        # signal = signal * 10
-        # if np.max(np.abs(signal)) < 10000:
+
+        # Normalize the signal using threshold
+        # if np.max(signal) < 10000:
         #     signal = signal * (10000 / np.max(signal))
 
         total_pred = np.array([])
@@ -87,6 +88,17 @@ def vad_forward(data_dir: str, model_path: str):
 
             tmp_signal = signal[i : int(i + FS * FRAME_T)]
 
+            # Comapre the max signal and mean signal to determine whether the signal is too small
+            max_signal = np.max(tmp_signal)
+            mean_signal = np.abs(np.std(tmp_signal))
+            # print(max_signal, mean_signal)
+            if max_signal > 1000:
+                if np.max(tmp_signal) < 15000:
+                    tmp_signal = tmp_signal * (15000 / np.max(tmp_signal))
+
+            # elif (max_signal - mean_signal) > 400 or ((max_signal - mean_signal) > 100 and max_signal < 600):
+            #     if np.max(tmp_signal) < 15000 and np.max(tmp_signal) > 200:
+            #         tmp_signal = tmp_signal * (15000 / np.max(tmp_signal))
             # Get the energy specturm of the signal
             tmp_signal = filter.energy_filter(tmp_signal)
 
@@ -106,7 +118,7 @@ def vad_forward(data_dir: str, model_path: str):
                 total_pred = pred.copy()
             else:
                 total_pred = np.concatenate((total_pred, pred), axis=None)
-
+        # print(total_pred.shape)
         voice_segment = cal_voice_segment(total_pred, total_indices, signal_len)
 
         # dir_path = str(Path(__file__).parent)
@@ -144,6 +156,6 @@ if __name__ == "__main__":
     parent_path = Path(__file__).parent.parent.parent
     print(parent_path)
     model_path = str(Path(__file__).parent) + "/vad/model/model.pth"
-    data_dir = str(parent_path) + "/data/board"
+    data_dir = str(parent_path) + "/data/pc_single_ch"
     print(model_path)
     vad_forward(data_dir=data_dir, model_path=model_path)
