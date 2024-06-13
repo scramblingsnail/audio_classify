@@ -1,10 +1,9 @@
-from os import makedirs
 import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
-from vad.util import *
-from vad.VAD import VAD
-from vad.filter.filter_banks import Filter
+from filter.filter_banks import Filter
+from util import *
+from VAD import VAD
 
 
 def cal_voice_segment(pred_class, pred_idx_in_data, raw_data_len):
@@ -24,8 +23,6 @@ def cal_voice_segment(pred_class, pred_idx_in_data, raw_data_len):
     single_voice_segment = []
     diff_value = np.diff(pred_class)
 
-    voice_segment_tolerance = 2500
-
     for i in range(len(diff_value)):
         if diff_value[i] == 1:
             single_voice_segment.append(pred_idx_in_data[i + 1])
@@ -39,13 +36,10 @@ def cal_voice_segment(pred_class, pred_idx_in_data, raw_data_len):
             if len(all_voice_segment) == 0:
                 all_voice_segment = np.array(single_voice_segment).reshape(1, -1)
             else:
-                if single_voice_segment[0] - all_voice_segment[-1][1] < voice_segment_tolerance:
-                    all_voice_segment[-1][1] = single_voice_segment[1]
-                else:
-                    all_voice_segment = np.concatenate(
-                        (all_voice_segment, np.array(single_voice_segment).reshape(1, -1)),
-                        axis=0,
-                    )
+                all_voice_segment = np.concatenate(
+                    (all_voice_segment, np.array(single_voice_segment).reshape(1, -1)),
+                    axis=0,
+                )
             single_voice_segment = []
 
     if len(single_voice_segment) == 1:
@@ -54,12 +48,6 @@ def cal_voice_segment(pred_class, pred_idx_in_data, raw_data_len):
             (all_voice_segment, np.array(single_voice_segment).reshape(1, -1)), axis=0
         )
 
-    delete_index = []
-    for i in range(0, all_voice_segment.shape[0]):
-        if all_voice_segment[i][1] - all_voice_segment[i][0] < voice_segment_tolerance:
-            delete_index.append(i)
-    all_voice_segment = np.delete(all_voice_segment, delete_index, axis=0)
-    
     return all_voice_segment
 
 
@@ -67,7 +55,6 @@ def vad_forward(data_dir: str, model_path: str):
     vad_model = VAD(model_path=model_path)
     filter = Filter()
     for file_dir in Path(data_dir).iterdir():
-
         if file_dir.name[-3:] != "wav":
             continue
 
@@ -75,9 +62,6 @@ def vad_forward(data_dir: str, model_path: str):
         print(file_dir, sample_rate)
 
         signal, signal_len = sample_rate_to_8K(signal, sample_rate)
-        # signal = signal * 10
-        # if np.max(np.abs(signal)) < 10000:
-        #     signal = signal * (10000 / np.max(signal))
 
         total_pred = np.array([])
         total_indices = np.array([])
@@ -87,13 +71,7 @@ def vad_forward(data_dir: str, model_path: str):
 
             tmp_signal = signal[i : int(i + FS * FRAME_T)]
 
-            # Get the energy specturm of the signal
             tmp_signal = filter.energy_filter(tmp_signal)
-
-            # plt.figure()
-            # print(tmp_signal.shape)
-            # plt.imshow(tmp_signal)
-            # plt.show()
 
             pred = vad_model.process(tmp_signal)
 
@@ -109,11 +87,10 @@ def vad_forward(data_dir: str, model_path: str):
 
         voice_segment = cal_voice_segment(total_pred, total_indices, signal_len)
 
-        # dir_path = str(Path(__file__).parent)
-        # with open(dir_path + "/predict/" + file_dir.name[:-3] + "txt", "w") as file:
-        #     for segment in voice_segment:
-        #         file.write(str(segment[0]) + "," + str(segment[1]) + "\n")
-
+        dir_path = str(Path(__file__).parent)
+        with open(dir_path + "/predict/" + file_dir.name[:-3] + "txt", "w") as file:
+            for segment in voice_segment:
+                file.write(str(segment[0]) + "," + str(segment[1]) + "\n")
         plt.figure(1, figsize=(15, 7))
         plt.clf()
         draw_time_domain_image(
@@ -126,24 +103,16 @@ def vad_forward(data_dir: str, model_path: str):
         plt.grid()
         plt.show()
 
-        # segment_dir = data_dir + '/segment'
-        # makedirs(segment_dir, exist_ok=True)
-
-        # with open(segment_dir + "/" + file_dir.name[:-3] + "txt", "w") as file:
-        #     for segment in voice_segment:
-        #         file.write(str(segment[0]) + "," + str(segment[1]) + "\n")
-
 
 if __name__ == "__main__":
     FS = 8000
     FRAME_T = 0.032
-    FRAME_STEP = 0.016
+    FRAME_STEP = 0.015
     VOICE_FRAME = 4
     UNVOICE_FRAME = 8
-    
-    parent_path = Path(__file__).parent.parent.parent
+    parent_path = Path(__file__).parent
     print(parent_path)
-    model_path = str(Path(__file__).parent) + "/vad/model/model.pth"
-    data_dir = str(parent_path) + "/data/board"
-    print(model_path)
+    model_path = str(parent_path) + "/model/model.pth"
+    data_dir = str(parent_path) + "/data"
+
     vad_forward(data_dir=data_dir, model_path=model_path)

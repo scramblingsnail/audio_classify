@@ -1,9 +1,13 @@
 import torch
-from model import CNN
+import sys
 from pathlib import Path
 
+sys.path.append(str(Path(__file__).parent))
+from model import CNN
+
+
 class VAD(object):
-    def __init__(self,model_path=None,sample_rate=8000,frame_len=0.03) -> None:
+    def __init__(self, model_path=None, sample_rate=8000, frame_len=0.03) -> None:
         """
         :param model_path: model file dir
         :param frame_len: Length of time per frame (s)
@@ -20,7 +24,7 @@ class VAD(object):
 
         self.__load_model__(model_path=model_path)
 
-    def __load_model__(self,model_path):
+    def __load_model__(self, model_path):
         """load model
 
         :param model_path: model file dir
@@ -30,23 +34,23 @@ class VAD(object):
         self.model.load_state_dict(torch.load(model_path))
         self.model.eval()
 
-    def process(self,inp_data):
+    def process(self, inp_data):
         """The actual processing of the Voice Activity Detector, It is processed frame by frame and the results are smoothed
 
         :param inp_data: Input audio data,(sample_N,)
         :return Current output audio data(N,), the label that can be output currently(M,),The position corresponding to the starting point of each frame(M,)
         """
 
-        if len(inp_data.shape) > 1:
-            raise Exception("data shape should be (sample_N,)!")
+        # if len(inp_data.shape) > 1:
+        #     raise Exception("data shape should be (sample_N,)!")
 
-        if len(inp_data) < self.frame_len:
-            raise Exception("input length must be %d".format(self.frame_len))
+        # if len(inp_data) < self.frame_len:
+        #     raise Exception("input length must be %d".format(self.frame_len))
 
-        frame_data = torch.from_numpy(inp_data).float()
-        frame_data = frame_data.unsqueeze(0).unsqueeze(0).unsqueeze(0)
+        # frame_data = torch.from_numpy(inp_data).float()
+        frame_data = inp_data.unsqueeze(0).unsqueeze(0)
 
         model_output = self.model(frame_data)
-        pred = torch.max(model_output,1)[1].data.numpy()
+        pred = torch.max(model_output, 1)[1].data.numpy()
 
         return pred

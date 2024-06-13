@@ -1,8 +1,13 @@
 import torch
 from pathlib import Path
-from util import read_wav, sample_rate_to_8K
+
 import numpy as np
 from torch.utils.data import Dataset
+import sys
+
+sys.path.append(str(Path(__file__).parent))
+from filter.filter_banks import Filter
+from util import read_wav, sample_rate_to_8K
 
 def read_label_txt(label_path):
     labels = []
@@ -14,7 +19,7 @@ def read_label_txt(label_path):
     return np.array(labels)
 
 def get_train_data(
-    FS=8000, FRAME_T=0.03, FRAME_STEP=0.015, VOICE_FRAME=4, UNVOICE_FRAME=8
+    FS=8000, FRAME_T=0.032, FRAME_STEP=0.016, VOICE_FRAME=4, UNVOICE_FRAME=8
 ):
     
     train_voice_segments = []
@@ -23,6 +28,7 @@ def get_train_data(
     data_dir = str(Path(__file__).parent) + "/data"
     label_dir = str(Path(__file__).parent) + "/label"
 
+    filter = Filter()
     for file_dir in Path(data_dir).iterdir():
         if file_dir.name[-3:] != "wav":
             continue
@@ -40,6 +46,8 @@ def get_train_data(
                 break
 
             tmp_signal = signal[i : int(i + FS * FRAME_T)]
+            tmp_signal = filter.energy_filter(tmp_signal)
+
             train_voice_segments.append(tmp_signal)
             
             label_num = 0
@@ -53,8 +61,9 @@ def get_train_data(
                 #     label_num = [0,1]
 
             train_voice_label.append(label_num)
-
+    
     train_voice_segments = np.array(train_voice_segments)
+    print(train_voice_segments.shape)
     train_voice_label = np.array(train_voice_label)
     # print(train_voice_label.shape)
     return train_voice_segments, train_voice_label
@@ -62,10 +71,13 @@ def get_train_data(
 class VAD_Dataset(Dataset):
     def __init__(self):
         self.data, self.label = get_train_data()
-        self.data = self.data.reshape(-1, 1, 1, 240)
+        self.data = self.data.reshape(-1, 1, 129, 1)
         self.data = torch.from_numpy(self.data).float()
         self.label = torch.from_numpy(self.label).long()
-        print(self.label.shape)
+
+        self.filter = Filter()
+        print('Data shape:', self.data.shape)
+        print('Label shape:', self.label.shape)
         
     def __len__(self):
         return self.data.shape[0]
