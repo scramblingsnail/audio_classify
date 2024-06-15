@@ -7,7 +7,7 @@ from .train import train
 from .test import test
 from .utils import prepare_data, set_device, set_seed
 from ..cfg import load_config
-from ..net import AudioClassifier
+from ..net import AudioClassifier, save_model_c_params
 from ..feature_extract import get_all_features
 from ..data_loader import get_loaders
 
@@ -32,7 +32,12 @@ def classify_pipeline(config_flag: str = None):
 	print(model_dir)
 	if not os.path.exists(model_dir):
 		os.mkdir(model_dir)
-	model_path = os.path.join(root, r'model/{}-model.pkl'.format(config_flag))
+
+	config_model_dir = os.path.join(model_dir, config_flag)
+	if not os.path.exists(config_model_dir):
+		os.mkdir(config_model_dir)
+
+	model_path = os.path.join(config_model_dir, r'{}-model.pkl'.format(config_flag))
 
 	device = set_device(config['device'])
 	set_seed(config['random_seed'])
@@ -61,3 +66,6 @@ def classify_pipeline(config_flag: str = None):
 			if bin_acc > max_bin_acc and multi_acc > max_multi_acc:
 				max_bin_acc, max_multi_acc = bin_acc, multi_acc
 				torch.save(model, model_path)
+
+	# save parameters for c:
+	save_model_c_params(model_path=model_path, save_dir=config_model_dir)
