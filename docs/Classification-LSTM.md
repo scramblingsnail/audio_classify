@@ -1,0 +1,85 @@
+# Audio Classification using LSTM
+
+## 基于LSTM的语音片段分类
+本部分在整个工作流程中的位置如下工作流程中的加粗部分：
+
+### 工作流程简述
+我们设计了一个语音处理Pipeline, 将前级的VAD、特征提取、后级的分类计算作为一个整体。譬如，在我们的方案中，特征并不是提取完成后再进行处理，而是
+利用LSTM作为分类器，再逐帧进行VAD判断与特征提取的同时进行LSTM的计算，因此能极大提高计算效率。工作流程简述如下：
+
+- VAD判断当前语音帧是否存在语音活动，如果存在，则该帧为有效语音帧，将当前语音帧送入下一级处理。
+- 对有效语音帧进行`MFCC`特征提取。
+- **将该语音帧对应的`MFCC`特征向量作为`LSTM cell`单个时间步的输入。**
+- **`LSTM cell` 持续进行迭代计算，直到没有有效语音帧。最后将`LSTM cell`的`hidden states`
+输入最后的`Fully Connected Layer` 进行分类，判断该语音片段的种类。**
+
+
+### 数据处理
+
+1. LSTM 的训练与测试数据来自于 `pc` 与 `board` 目录下的语音文件。其中`pc` 中的语音文件
+被转为了`sample rate`为`8000`, 单声道的语音文件。
+2. 利用VAD截取出语音文件中的有效语音片段作为训练与测试数据。在截取过程中，我们对分割点进行了随机的
+扰动，以模拟实际情况下VAD的非理想性。
+3. 从这些语音片段中提取出 `MFCC` 特征，并以 8:2的比例，对每个`label`的说话人进行训练集-测试集分割。
+4. 计算训练集与测试集各自在特征维度上的均值与标准差，将训练与测试数据进行标准化。
+
+[mfcc](./src/feature_extract/audio_features.py) or [mel-spectrogram](./src/feature_extract/audio_features.py). 
+这些提取的特征将保存在目录[data](./data)的子目录 `mfcc` or `mel-spectrogram` 
+
+### 网络训练
+采用的网络结构如下：[模型定义](../src/net/lstm.py)
+
+```python
+class AudioClassifier(nn.Module):
+	def __init__(self, input_size: int, hidden_size: int, num_layers: int, output_size: int):
+		super().__init__()
+		self.lstm = nn.LSTM(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers, batch_first=True,
+							bidirectional=False)
+		self.fc = nn.Linear(hidden_size, output_size)
+		self.softmax = nn.Softmax(dim=1)
+
+	def forward(self, x: torch.Tensor, lens: torch.Tensor):
+		r"""
+
+		Args:
+			x (torch.Tensor): input features with size (N, L, INPUT_SIZE)
+			lens (torch.Tensor): sequence lengths with size (N, )
+
+		Returns:
+			bin_p (torch.Tensor): the possibility vector for binary classification.
+			multi_p (torch.Tensor): the possibility vector for multi-class classification.
+		"""
+		# N, L, H_{out}
+		x, _ = self.lstm(x)
+		# N, 1, H_{out}
+		x = torch.gather(x, dim=1, index=(lens - 1).unsqueeze(1).unsqueeze(2).expand(x.size()[0], 1, x.size()[2]))
+		x = x.squeeze(1)
+		x = self.fc(x)
+		bin_p = self.softmax(x[:, :2])
+		multi_p = self.softmax(x[:, 2:])
+		return bin_p, multi_p
+```
+
+其中输出层的前两个输出值用于进行唤醒词 `Hi 芯原` 的二分类，剩余输出值用于进行 `命令` 的多分类。
+在这个例子中，共有`4`中命令，其中有一类代表`无效命令`。损失函数采用`CrossEntropyLoss`。
+
+### 训练结果:
+训练完成的LSTM分类器，在测试集上取得了 二分类准确率 `100%`，多分类准确率 `98%` 的测试结果。
+
+### 快速开始
+我们提供了便捷的训练测试入口。
+
+- 在[这个目录下](./src/cfg)创建你的配置文件(`XXX.yaml`)，你可以参考 [config1](./src/cfg/config1.yaml) 作为一个例子。
+- 转到[运行脚本run](./run.py), 将对应的参数`config_flag`修改为你配置文件的名字`XXX`。
+- run
+
+
+## 进一步优化的方向
+本任务由多个子任务协调进行，因此在对每个任务进行设计优化时，要充分考虑其它任务的影响，并尽可能地优化计算成本。由此出发，我们还会在如下方面进行优化：
+1. 进行更大规模的数据增强，提高 `VAD` 与 `Audio Classification` 的鲁棒性与泛用性，该数据增强包括：
+   2. 添加各种不同强度背景噪声或背景人声的数据。
+   3. 利用语音生成大模型获取各种不同音色的语音数据。
+   4. 对语音片段进行随机加空帧与裁剪，提高后级分类器对于VAD的容错性。
+5. 减少计算成本：从如下角度进行优化：
+   6. 对训练完成的网络进行蒸馏、剪枝、量化，尽可能减少硬件的计算负担。
+   7. 在特征提取维度、（VAD与LSTM分类器）网络规模、识别准确率中取得最佳的平衡。
