@@ -16,7 +16,7 @@
 **CNN网络**，使用大小为2X1的卷积核进行滑动卷积，slide设置为2，并在CNN后接入了一个全连接层，具体参见`model.py`。
 
 - 使用交叉熵函数计算Loss值，以及使用了Adam算法对网络进行优化。
-- 使用softmax函数
+- 使用softmax函数和LeakyReLU作为非线性层
 
 ```python
 class CNN(nn.Module):
