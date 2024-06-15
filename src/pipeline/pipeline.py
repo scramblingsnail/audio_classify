@@ -8,7 +8,7 @@ from .train import train
 from .test import test
 from .utils import prepare_data, set_device, set_seed
 from ..cfg import load_config
-from ..net import AudioClassifier
+from ..net import AudioClassifier, save_model_c_params
 from ..feature_extract import get_all_features
 from ..data_loader import get_loaders
 from ..feature_extract import mfcc_features
