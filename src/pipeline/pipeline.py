@@ -1,5 +1,6 @@
 import torch
 import os
+import numpy as np
 
 from torch.optim import Adam
 
@@ -10,6 +11,7 @@ from ..cfg import load_config
 from ..net import AudioClassifier, save_model_c_params
 from ..feature_extract import get_all_features
 from ..data_loader import get_loaders
+from ..feature_extract import mfcc_features
 
 
 def classify_pipeline(config_flag: str = None):
@@ -87,3 +89,49 @@ def test_pipeline(config_flag):
 	model_path = os.path.join(config_model_dir, r'{}-model.pkl'.format(config_flag))
 	model = torch.load(model_path, map_location=device)
 	test(model=model, test_loader=test_dataloader)
+
+
+def debug(config_flag):
+	config = load_config(config_flag)
+	prepare_data()
+
+	root = __file__
+	for i in range(3):
+		root = os.path.dirname(root)
+	config['root'] = root
+
+	device = set_device(config['device'])
+	model_dir = os.path.join(root, r'model')
+	config_model_dir = os.path.join(model_dir, config_flag)
+	model_path = os.path.join(config_model_dir, r'{}-model.pkl'.format(config_flag))
+	model = torch.load(model_path, map_location=device)
+
+	for wav_idx in range(7):
+		wav_path = os.path.join(root, 'data/qemu/{:d}.wav'.format(wav_idx))
+		mean_path = os.path.join(root, 'data/mfcc/{}_all_mean.txt'.format(config_flag))
+		std_path = os.path.join(root, 'data/mfcc/{}_all_std.txt'.format(config_flag))
+
+		mean = np.loadtxt(mean_path)
+		std = np.loadtxt(std_path)
+
+		mean = torch.as_tensor(mean, dtype=torch.float, device=device).unsqueeze(1)
+		std = torch.as_tensor(std, dtype=torch.float, device=device).unsqueeze(1)
+		# print(mean.size(), mean)
+		# print(std.size(), std)
+
+		mfcc = mfcc_features(wav_path=wav_path, config=config)
+		# print(mfcc.size())
+		mfcc = mfcc.squeeze(0).to(device)
+		mfcc = (mfcc - mean) / std
+		mfcc = torch.transpose(mfcc, 0, 1)
+		lens = torch.tensor([mfcc.size()[1]], dtype=torch.long, device=device)
+		# print(lens)
+
+		inputs = mfcc.unsqueeze(0)
+		output = model.forward(inputs, lens)
+		binary, multi =  output[0].detach(), output[1].detach()
+		print('binary: ', binary, 'multi: ', multi)
+		print('\t>>> label: binary: ', torch.argmax(binary).cpu().numpy(), 'multi: ', torch.argmax(multi).cpu().numpy())
+
+
+

@@ -107,7 +107,7 @@ def normalize_features(tensor_list: List[torch.Tensor]):
 	tmp_tensor = torch.cat(tensor_list, dim=-1)
 	std, mean = torch.std(tmp_tensor, dim=-1, keepdim=True), torch.mean(tmp_tensor, dim=-1, keepdim=True)
 	normalized_tensors = [(tensor - mean) / std for tensor in tensor_list]
-	return normalized_tensors
+	return normalized_tensors, mean, std
 
 
 def save_features(save_path, data, labels, lens):
@@ -162,8 +162,25 @@ def get_all_features(config: dict):
 		test_data += label_test_data
 		test_labels.append(torch.empty(len(label_test_data), dtype=torch.int).fill_(label))
 
-	train_data = normalize_features(train_data)
-	test_data = normalize_features(test_data)
+	all_data = train_data + test_data
+	_, all_mean, all_std = normalize_features(all_data)
+	train_data, train_mean, train_std = normalize_features(train_data)
+	test_data, test_mean, test_std = normalize_features(test_data)
+
+	# add save mean and std.
+	train_mean_path = r'{}/{}_train_mean.txt'.format(save_dir, data_flag)
+	train_std_path = r'{}/{}_train_std.txt'.format(save_dir, data_flag)
+	test_mean_path = r'{}/{}_test_mean.txt'.format(save_dir, data_flag)
+	test_std_path = r'{}/{}_test_std.txt'.format(save_dir, data_flag)
+	all_mean_path = r'{}/{}_all_mean.txt'.format(save_dir, data_flag)
+	all_std_path = r'{}/{}_all_std.txt'.format(save_dir, data_flag)
+
+	np.savetxt(train_mean_path, train_mean.squeeze(0).numpy())
+	np.savetxt(train_std_path, train_std.squeeze(0).numpy())
+	np.savetxt(test_mean_path, test_mean.squeeze(0).numpy())
+	np.savetxt(test_std_path, test_std.squeeze(0).numpy())
+	np.savetxt(all_mean_path, all_mean.squeeze(0).numpy())
+	np.savetxt(all_std_path, all_std.squeeze(0).numpy())
 
 	train_data = padding_features(train_data, max_len=max(train_lens))
 	test_data = padding_features(test_data, max_len=max(test_lens))

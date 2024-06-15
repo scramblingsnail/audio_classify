@@ -9,7 +9,7 @@ feature_func_name: 'mfcc'
 #   common settings for mfcc and mel-spectrogram
 win_length: 0.032 # s
 hop_length: 0.016 # s
-n_mels: 128
+n_mels: 48
 
 #   for mfcc
 n_mfcc: 40
@@ -18,7 +18,7 @@ n_mfcc: 40
 test_ratio: 0.2
 
 # for model:
-hidden_size: 128
+hidden_size: 64
 num_layers: 1
 #   binary classify + 4-class classify
 output_size: 6
