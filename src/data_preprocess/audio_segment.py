@@ -30,7 +30,7 @@ def mk_label_dir(segment_data_dir, label: int):
 
 def save_audio_segments(raw_data_dir):
     r""" speaker-label-voice_idx """
-    r""" 13-6, 13-7, 19-9, 21-9, 22-6 in board failed  """
+    r""" 13-6, 13-7, 19-9, 21-9, 22-6 in board not saved  """
     print('Segmenting audio waves ...')
     segment_dir = os.path.join(raw_data_dir, 'segment')
 

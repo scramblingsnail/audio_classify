@@ -47,8 +47,8 @@ class VAD(object):
         # if len(inp_data) < self.frame_len:
         #     raise Exception("input length must be %d".format(self.frame_len))
 
-        # frame_data = torch.from_numpy(inp_data).float()
-        frame_data = inp_data.unsqueeze(0).unsqueeze(0)
+        frame_data = torch.from_numpy(inp_data).float()
+        frame_data = frame_data.unsqueeze(0).unsqueeze(2).unsqueeze(0)
 
         model_output = self.model(frame_data)
         pred = torch.max(model_output, 1)[1].data.numpy()
