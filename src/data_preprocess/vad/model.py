@@ -13,7 +13,7 @@ class CNN(nn.Module):
     def __init__(
         self,
         input_channel=1,
-        n_channel=4,
+        n_channel=1,
         kernel_size=2,
         stride=2,
         dilation=1,
@@ -21,7 +21,7 @@ class CNN(nn.Module):
     ) -> None:
         super(CNN, self).__init__()
 
-        self.fc_size = 256
+        self.fc_size = 128
         model = nn.Sequential(
             nn.Conv2d(
                 in_channels=input_channel,

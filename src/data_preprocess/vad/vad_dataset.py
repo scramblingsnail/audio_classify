@@ -30,9 +30,9 @@ def get_segments_data(
     label_dir=None,
 ):
     for file_dir in Path(data_dir).iterdir():
-        if file_dir.name[-3:] != "wav":
+        if file_dir.name[-3:] != "wav" or file_dir.name == "qemu_data.wav":
             continue
-        filter = Filter()
+        # filter = Filter()
         label_file_name = label_dir + "/" + file_dir.name[:-3] + "txt"
         labels = read_label_txt(label_file_name)
         # print(labels.shape)
@@ -45,8 +45,8 @@ def get_segments_data(
                 break
 
             tmp_signal = signal[i : int(i + FS * FRAME_T)]
-            tmp_signal = filter.energy_filter(tmp_signal)
-
+            # tmp_signal = filter.energy_filter(tmp_signal)
+            # print(tmp_signal.shape)
             train_voice_segments.append(tmp_signal)
 
             label_num = 0
@@ -120,7 +120,7 @@ def get_train_data(
 class VAD_Dataset(Dataset):
     def __init__(self):
         self.data, self.label = get_train_data()
-        self.data = self.data.reshape(-1, 1, 129, 1)
+        self.data = self.data.reshape(-1, 1, 256, 1)
         self.data = torch.from_numpy(self.data).float()
         self.label = torch.from_numpy(self.label).long()
 

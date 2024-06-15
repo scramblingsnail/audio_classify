@@ -53,7 +53,7 @@ def cal_voice_segment(pred_class, pred_idx_in_data, raw_data_len):
 
 def vad_forward(data_dir: str, model_path: str):
     vad_model = VAD(model_path=model_path)
-    filter = Filter()
+    # filter = Filter()
     for file_dir in Path(data_dir).iterdir():
         if file_dir.name[-3:] != "wav":
             continue
@@ -62,7 +62,8 @@ def vad_forward(data_dir: str, model_path: str):
         print(file_dir, sample_rate)
 
         signal, signal_len = sample_rate_to_8K(signal, sample_rate)
-
+        if file_dir.name == "qemu_data.wav":
+            signal = signal * 200000
         total_pred = np.array([])
         total_indices = np.array([])
         for i in range(0, signal_len, int(FRAME_STEP * FS)):
@@ -71,7 +72,7 @@ def vad_forward(data_dir: str, model_path: str):
 
             tmp_signal = signal[i : int(i + FS * FRAME_T)]
 
-            tmp_signal = filter.energy_filter(tmp_signal)
+            # tmp_signal = filter.energy_filter(tmp_signal)
 
             pred = vad_model.process(tmp_signal)
 

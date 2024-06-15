@@ -5,7 +5,7 @@ SAMPLE_RATE = 8000
 
 dir_path = str(Path(__file__).parent)
 
-data_num = 1
+data_num = 3
 WAV = dir_path + f'/data/data_{data_num}.wav'
 LABEL_INPUT = dir_path + f'/label/data_{data_num}.txt'
 PREDICT_INPUT = dir_path + f'/predict/data_{data_num}.txt'
