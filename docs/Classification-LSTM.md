@@ -64,7 +64,65 @@ class AudioClassifier(nn.Module):
 在这个例子中，共有`4`中命令，其中有一类代表`无效命令`。损失函数采用`CrossEntropyLoss`。
 
 ### 训练结果:
-训练完成的LSTM分类器，在测试集上取得了 二分类准确率 `100%`，多分类准确率 `98%` 的测试结果。
+训练完成的LSTM分类器，在测试集上取得了 二分类准确率 `99%`，多分类准确率 `95%` 的测试结果。
+
+```text
+Epoch 0 - loss: 1.5698 - lr: 0.0040
+Epoch 1 - loss: 1.3784 - lr: 0.0040
+Epoch 2 - loss: 1.1866 - lr: 0.0040
+Epoch 3 - loss: 1.1445 - lr: 0.0040
+Epoch 4 - loss: 1.1126 - lr: 0.0040
+Epoch 5 - loss: 1.1130 - lr: 0.0040
+Epoch 6 - loss: 1.1007 - lr: 0.0040
+Epoch 7 - loss: 1.0854 - lr: 0.0040
+Epoch 8 - loss: 1.0854 - lr: 0.0040
+Epoch 9 - loss: 1.0766 - lr: 0.0040
+- binary test acc: 0.96, - multi test acc: 0.93
+Epoch 10 - loss: 1.0894 - lr: 0.0040
+Epoch 11 - loss: 1.0966 - lr: 0.0040
+Epoch 12 - loss: 1.0898 - lr: 0.0040
+Epoch 13 - loss: 1.0906 - lr: 0.0020
+Epoch 14 - loss: 1.0855 - lr: 0.0020
+Epoch 15 - loss: 1.0743 - lr: 0.0020
+Epoch 16 - loss: 1.0710 - lr: 0.0020
+Epoch 17 - loss: 1.0723 - lr: 0.0020
+Epoch 18 - loss: 1.0705 - lr: 0.0020
+Epoch 19 - loss: 1.0693 - lr: 0.0020
+- binary test acc: 0.99, - multi test acc: 0.94
+Epoch 20 - loss: 1.0696 - lr: 0.0020
+Epoch 21 - loss: 1.0681 - lr: 0.0020
+Epoch 22 - loss: 1.0668 - lr: 0.0020
+Epoch 23 - loss: 1.0677 - lr: 0.0020
+Epoch 24 - loss: 1.0741 - lr: 0.0020
+Epoch 25 - loss: 1.0687 - lr: 0.0020
+Epoch 26 - loss: 1.0674 - lr: 0.0010
+Epoch 27 - loss: 1.0668 - lr: 0.0010
+Epoch 28 - loss: 1.0667 - lr: 0.0010
+Epoch 29 - loss: 1.0667 - lr: 0.0010
+- binary test acc: 0.99, - multi test acc: 0.95
+Epoch 30 - loss: 1.0667 - lr: 0.0005
+Epoch 31 - loss: 1.0668 - lr: 0.0005
+Epoch 32 - loss: 1.0666 - lr: 0.0005
+Epoch 33 - loss: 1.0669 - lr: 0.0005
+Epoch 34 - loss: 1.0668 - lr: 0.0005
+Epoch 35 - loss: 1.0666 - lr: 0.0005
+Epoch 36 - loss: 1.0665 - lr: 0.0003
+Epoch 37 - loss: 1.0665 - lr: 0.0003
+Epoch 38 - loss: 1.0665 - lr: 0.0003
+Epoch 39 - loss: 1.0665 - lr: 0.0003
+- binary test acc: 0.99, - multi test acc: 0.95
+Epoch 40 - loss: 1.0666 - lr: 0.0003
+Epoch 41 - loss: 1.0665 - lr: 0.0001
+Epoch 42 - loss: 1.0666 - lr: 0.0001
+Epoch 43 - loss: 1.0664 - lr: 0.0001
+Epoch 44 - loss: 1.0666 - lr: 0.0001
+Epoch 45 - loss: 1.0664 - lr: 0.0001
+Epoch 46 - loss: 1.0664 - lr: 0.0001
+Epoch 47 - loss: 1.0664 - lr: 0.0001
+Epoch 48 - loss: 1.0664 - lr: 0.0001
+Epoch 49 - loss: 1.0664 - lr: 0.0001
+- binary test acc: 0.99, - multi test acc: 0.95
+```
 
 ### 快速开始
 我们提供了便捷的训练测试入口。
