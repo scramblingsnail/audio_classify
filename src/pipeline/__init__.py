@@ -1,1 +1,1 @@
-from .pipeline import classify_pipeline
+from .pipeline import classify_pipeline, test_pipeline

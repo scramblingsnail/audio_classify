@@ -55,12 +55,12 @@ def classify_pipeline(config_flag: str = None):
 															  patience=config['lr_patience'], min_lr=config['min_lr'],
 															  threshold=config['metric_threshold'],
 															  threshold_mode='rel', cooldown=config['cool_down'])
-
+	# train loop
 	max_bin_acc, max_multi_acc = 0, 0
 	for epoch in range(config['epochs']):
 		train_loss = train(model=model, train_loader=train_dataloader, optimizer=optimizer, loss_func=loss_func)
 		lr_reduction.step(train_loss)
-		print('Epoch {} - loss: {:.4f} - lr: {:.4f}'.format(epoch, train_loss,optimizer.param_groups[0]['lr']))
+		print('Epoch {} - loss: {:.4f} - lr: {:.4f}'.format(epoch, train_loss, optimizer.param_groups[0]['lr']))
 		if (epoch + 1) % config['evaluate_interval'] == 0:
 			bin_acc, multi_acc = test(model=model, test_loader=test_dataloader)
 			if bin_acc > max_bin_acc and multi_acc > max_multi_acc:
@@ -69,3 +69,21 @@ def classify_pipeline(config_flag: str = None):
 
 	# save parameters for c:
 	save_model_c_params(model_path=model_path, save_dir=config_model_dir)
+
+
+def test_pipeline(config_flag):
+	config = load_config(config_flag)
+	root = __file__
+	for i in range(3):
+		root = os.path.dirname(root)
+	config['root'] = root
+	train_data_path, test_data_path = get_all_features(config=config)
+	device = set_device(config['device'])
+
+	_, test_dataloader = get_loaders(batch_size=config['batch_size'], train_data_path=train_data_path,
+									 test_data_path=test_data_path, device=device)
+	model_dir = os.path.join(root, r'model')
+	config_model_dir = os.path.join(model_dir, config_flag)
+	model_path = os.path.join(config_model_dir, r'{}-model.pkl'.format(config_flag))
+	model = torch.load(model_path, map_location=device)
+	test(model=model, test_loader=test_dataloader)
