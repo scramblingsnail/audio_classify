@@ -78,7 +78,6 @@ class Filter:
             if top_db < 0:
                 raise ValueError("top_db must be non-negative")
             log_spec = torch.maximum(log_spec, log_spec.max() - top_db)
-
         return log_spec
 
 
@@ -95,4 +94,5 @@ if __name__ == "__main__":
 
     plt.figure(1)
     plt.imshow(filter.energy_filter(wave_points))
+    plt.colorbar()
     plt.show()
