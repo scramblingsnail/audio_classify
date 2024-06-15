@@ -89,7 +89,7 @@ class CNN(nn.Module):
         self.model = model
 ```
 
-# evaluate_score.py
+# 分数评价 —— evaluate_score.py
 
 运行该文件，并更改相应参数，即可得到评估结果。默认评估对data_1的预测结果。
 - 参数
